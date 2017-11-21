@@ -7,7 +7,7 @@ class ClientSupervisor:
         self.num_clients = 0
         self.word_list = []
 
-def on_new_client(clientsocket,addr, supervisor):
+def on_new_client(clientsocket,addr, supervisor, word):
 
     msg = clientsocket.send("OK")
     msg = clientsocket.recv(1024)
@@ -19,7 +19,7 @@ def on_new_client(clientsocket,addr, supervisor):
         print("Connectioon Failed, Terminating Connection")
         isRunning = False
 
-    word = random.choice(supervisor.word_list).lower()
+    # word = random.choice(supervisor.word_list).lower()
     print("The word for this sucker is " + word)
     incorrect_guesses = ""
     num_incorrect_guesses = 0
@@ -135,13 +135,14 @@ def main():
             c, addr = s.accept()     # Establish connection with client.
             print('Got connection from', addr)
             supervisor.num_clients += 1
-            thread.start_new_thread(on_new_client,(c,addr,supervisor))
+            word = random.choice(supervisor.word_list).lower()
+            thread.start_new_thread(on_new_client,(c,addr,supervisor,word))
             print("Handling thread started")
             #Note it's (addr,) not (addr) because second parameter is a tuple
             #Edit: (c,addr)
             #that's how you pass arguments to functions when creating new threads using thread module.
-            if supervisor.num_clients == 2:
-                isRunning = False
+            # if supervisor.num_clients == 2:
+            #     isRunning = False
         else:
             c, addr = s.accept()
             thread.start_new_thread(deny_new_client, (c, addr))
