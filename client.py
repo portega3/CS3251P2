@@ -16,7 +16,7 @@ elif data == 'q' or data == 'Q':
 
 
 msg = client_socket.recv(1024)
-word, incorrect_guesses, _, __ = msg.split("/")
+word, incorrect_guesses, _, _ = msg.split("/")
 print(word)
 # print("Incorrect Guesses: %s" % str(incorrect_guesses))
 isRunning = True

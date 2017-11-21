@@ -33,16 +33,19 @@ def on_new_client(clientsocket,addr, supervisor):
     isRunning = True
     while isRunning:
         guess = clientsocket.recv(1024)
+        print("\nGuess on this end: %s" % str(guess))
         return_string, current_guesses, is_correct, all_correct = check_guess(word, current_guesses, guess)
+        print("Is Correct guess: %s" % str(is_correct))
+        msg = ("/").join([str(return_string), str(incorrect_guesses), str(is_correct), str(all_correct)])
         if all_correct:
             print("Victor!")
             isRunning = False
         elif not is_correct:
             incorrect_guesses = incorrect_guesses + guess
             num_incorrect_guesses += 1
-            msg = ("/").join([str(return_string), str(incorrect_guesses), str(is_correct), str(all_correct)])
             print("Found Incorrect Guess")
-
+        elif is_correct:
+            print("Found Correct Guess")
         clientsocket.send(msg)
         #do some checks and if msg == someWeirdSignal: break:
         # msg = raw_input('SERVER >> ')
