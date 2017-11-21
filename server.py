@@ -6,17 +6,25 @@ class ClientSupervisor:
     def __init__(self):
         self.num_clients = 0
         self.word_list = []
+    def add_client(self):
+        self.num_clients += 1
+    def close_client(self):
+        self.num_clients -= 1
+    def get_num_clients(self):
+        return self.num_clients
 
-def on_new_client(clientsocket,addr, supervisor, word):
+def on_new_client(clientsocket,addr, word):
 
+    global supervisor
+    supervisor.add_client()
     msg = clientsocket.send("OK")
     msg = clientsocket.recv(1024)
 
     if msg == "OK":
-        print("Connection Successful")
+        # print("Connection Successful")
         isRunning = True
     else:
-        print("Connectioon Failed, Terminating Connection")
+        # print("Connectioon Failed, Terminating Connection")
         isRunning = False
 
     # word = random.choice(supervisor.word_list).lower()
@@ -28,24 +36,30 @@ def on_new_client(clientsocket,addr, supervisor, word):
     return_string, current_guesses, is_correct, all_correct = check_guess(word, [], [], initializing=True)
     msg = ("/").join([str(return_string), str(incorrect_guesses), str(is_correct), str(all_correct)])
     clientsocket.send(msg)
-    print("here?")
+    # print("here?")
 
     isRunning = True
     while isRunning:
         guess = clientsocket.recv(1024)
-        print("\nGuess on this end: %s" % str(guess))
+        # print("\nGuess on this end: %s" % str(guess))
         return_string, current_guesses, is_correct, all_correct = check_guess(word, current_guesses, guess)
-        print("Is Correct guess: %s" % str(is_correct))
-        msg = ("/").join([str(return_string), str(incorrect_guesses), str(is_correct), str(all_correct)])
+        # print("Is Correct guess: %s" % str(is_correct))
+
         if all_correct:
-            print("Victor!")
+            # print("Victor!")
             isRunning = False
+            msg = ("/").join([str(return_string), str(incorrect_guesses), str(is_correct), str(all_correct)])
+
         elif not is_correct:
             incorrect_guesses = incorrect_guesses + guess
             num_incorrect_guesses += 1
-            print("Found Incorrect Guess")
+            msg = ("/").join([str(return_string), str(incorrect_guesses), str(is_correct), str(all_correct)])
+
+            # print("Found Incorrect Guess")
         elif is_correct:
-            print("Found Correct Guess")
+            # print("Found Correct Guess")
+            msg = ("/").join([str(return_string), str(incorrect_guesses), str(is_correct), str(all_correct)])
+        # if isRunning:
         clientsocket.send(msg)
         #do some checks and if msg == someWeirdSignal: break:
         # msg = raw_input('SERVER >> ')
@@ -60,7 +74,7 @@ def on_new_client(clientsocket,addr, supervisor, word):
         if num_incorrect_guesses >= 6:
             isRunning = False
 
-    supervisor.num_clients -= 1
+    supervisor.close_client()
     clientsocket.close()
 
 def check_guess(correct_word, current_guesses, guess, initializing=False):
@@ -91,6 +105,7 @@ def check_guess(correct_word, current_guesses, guess, initializing=False):
 def deny_new_client(clientsocket,addr):
 
     msg = clientsocket.send("q")
+    # msg = clientsocket.rcv(1024)
     #do some checks and if msg == someWeirdSignal: break:
     #
     #     print(addr, ' >> ', msg)
@@ -115,10 +130,9 @@ def main():
     port = 50000                # Reserve a port for your service.
 
     #Starting Supervisor
-    supervisor = ClientSupervisor()
+    global supervisor
     #Loading File
-    supervisor.word_list = open_file('words.txt')
-    print("supervisor.word_list" + str(supervisor.word_list))
+
 
     print('Server started!')
     print('Waiting for clients...')
@@ -130,13 +144,15 @@ def main():
 
     isRunning = True
     while isRunning:
-        print("Num Clients: %s" % str(supervisor.num_clients))
-        if supervisor.num_clients < 3:
+        print("Num Clients: %s" % str(supervisor.get_num_clients()))
+        # num_clients = supervisor.num_clients
+        # print("num_clients: %s" % str(num_clients))
+        if supervisor.get_num_clients() < 3:
+            # supervisor.num_clients += 1
             c, addr = s.accept()     # Establish connection with client.
             print('Got connection from', addr)
-            supervisor.num_clients += 1
             word = random.choice(supervisor.word_list).lower()
-            thread.start_new_thread(on_new_client,(c,addr,supervisor,word))
+            thread.start_new_thread(on_new_client,(c,addr,word))
             print("Handling thread started")
             #Note it's (addr,) not (addr) because second parameter is a tuple
             #Edit: (c,addr)
@@ -150,4 +166,9 @@ def main():
     s.close()
 
 if __name__ == "__main__":
+    # num_clients = 0
+    global supervisor
+    supervisor = ClientSupervisor()
+    supervisor.word_list = open_file('words.txt')
+    print("supervisor.word_list" + str(supervisor.word_list))
     main()
