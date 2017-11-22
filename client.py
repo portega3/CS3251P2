@@ -84,19 +84,20 @@ if isRunning == True:
     msg = client_socket.recv(1024)
     word, incorrect_guesses, _, _ = msg.split("/")
     # print(word)
+    incorrect_guesses = list(incorrect_guesses)
     # print("Incorrect Guesses: %s" % str(incorrect_guesses))
     # isRunning = True
     while isRunning:
         border = "***************************"
         echo(border)
-        echo("Incorrect Guesses: %s" % str(incorrect_guesses))
+        echo("Incorrect Guesses: %s" % str(", ".join(incorrect_guesses)) )
         num_guesses_left = 6 - len(incorrect_guesses)
         draw_hangman(len(incorrect_guesses))
         echo(border)
         echo("%s Guess(es) Left!" % str(num_guesses_left))
         guess = raw_input("Please Enter a Guess\n\t%s\n$" % str(word)).lower()
 
-        if guess.isalpha() and len(guess) == 1:
+        if guess.isalpha() and len(guess) == 1 and guess not in incorrect_guesses:
 
             msg = client_socket.send(guess.lower())
 
@@ -104,7 +105,7 @@ if isRunning == True:
             # print("Received Message here: %s" % str(msg))
 
             word = msg[0]
-            incorrect_guesses = msg[1]
+            incorrect_guesses = list(msg[1])
             is_correct = msg[2]
             all_correct = msg[3]
 
@@ -127,13 +128,18 @@ if isRunning == True:
                     echo("Great Guess!")
                     if all_correct == "True":
                         echo("Victor!")
+                        draw_hangman(len(incorrect_guesses))
                         isRunning = False
                 else:
                     echo("Wrong!")
 
                 echo(word)
-                echo("Incorrect Guesses: %s" % str(incorrect_guesses))
+                echo("Incorrect Guesses: %s" % str((", ").join(incorrect_guesses)))
                 echo("***************************\n\n")
+        elif guess in incorrect_guesses:
+            print("\n")
+            echo("Letter Already Guessed!!")
+            echo("Please Choose a New Letter!")
         else:
             print("\n")
             echo("WRONG INPUT!")
