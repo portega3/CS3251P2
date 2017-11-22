@@ -23,22 +23,23 @@ def on_new_client(clientsocket,addr, word):
     if msg == "OK":
         # print("Connection Successful")
         isRunning = True
+        print("The word for this sucker is " + word)
+        incorrect_guesses = ""
+        num_incorrect_guesses = 0
+        current_guesses = []
+
+        return_string, current_guesses, is_correct, all_correct = check_guess(word, [], [], initializing=True)
+        msg = ("/").join([str(return_string), str(incorrect_guesses), str(is_correct), str(all_correct)])
+        clientsocket.send(msg)
     else:
         # print("Connectioon Failed, Terminating Connection")
         isRunning = False
 
     # word = random.choice(supervisor.word_list).lower()
-    print("The word for this sucker is " + word)
-    incorrect_guesses = ""
-    num_incorrect_guesses = 0
-    current_guesses = []
 
-    return_string, current_guesses, is_correct, all_correct = check_guess(word, [], [], initializing=True)
-    msg = ("/").join([str(return_string), str(incorrect_guesses), str(is_correct), str(all_correct)])
-    clientsocket.send(msg)
     # print("here?")
 
-    isRunning = True
+    # isRunning = True
     while isRunning:
         guess = clientsocket.recv(1024)
         # print("\nGuess on this end: %s" % str(guess))

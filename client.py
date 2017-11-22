@@ -50,12 +50,18 @@ client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect((host, 50000))
 
 data = client_socket.recv(1024)
+isRunning = False
 if data == "OK":
     print("Welcome to Hangman!")
-    raw_input("Press ENTER TO BEGIN")
-    msg = "OK"
-    msg = client_socket.send(msg)
-    isRunning = True
+    user_input = raw_input("\tENTER ANY KEY TO BEGIN \n\tENTER Q TO QUIT\n$").lower()
+    if user_input == "q":
+        msg = "q"
+        msg = client_socket.send(msg)
+        isRunning = False
+    else:
+        msg = "OK"
+        msg = client_socket.send(msg)
+        isRunning = True
 elif data == 'q' or data == 'Q':
     #Second attempt for error handling
     client_socket.close()
@@ -77,18 +83,18 @@ elif data == 'q' or data == 'Q':
 if isRunning == True:
     msg = client_socket.recv(1024)
     word, incorrect_guesses, _, _ = msg.split("/")
-    print(word)
+    # print(word)
     # print("Incorrect Guesses: %s" % str(incorrect_guesses))
     # isRunning = True
     while isRunning:
         border = "***************************"
-        print(border)
-        print("Incorrect Guesses: %s" % str(incorrect_guesses))
+        echo(border)
+        echo("Incorrect Guesses: %s" % str(incorrect_guesses))
         num_guesses_left = 6 - len(incorrect_guesses)
         draw_hangman(len(incorrect_guesses))
         echo(border)
-        print("%s Guess(es) Left!" % str(num_guesses_left))
-        guess = raw_input("Please Enter a Guess\n%s\n$" % str(word)).lower()
+        echo("%s Guess(es) Left!" % str(num_guesses_left))
+        guess = raw_input("Please Enter a Guess\n\t%s\n$" % str(word)).lower()
 
         if guess.isalpha() and len(guess) == 1:
 
@@ -109,26 +115,29 @@ if isRunning == True:
                 draw_hangman(6)
                 # print(fail_message)
                 print("")
+                echo(border)
+                echo('LOSER!!!', 2)
                 echo(border + "\n\n")
                 isRunning = False
             else:
                 # print("Received Message here: %s" % str(msg))
 
-                print("***************************")
+                echo("***************************")
                 if is_correct == "True":
-                    print("Great Guess!")
+                    echo("Great Guess!")
                     if all_correct == "True":
-                        print("Victor!")
+                        echo("Victor!")
                         isRunning = False
                 else:
-                    print("Wrong!")
+                    echo("Wrong!")
 
-                print(word)
-                print("Incorrect Guesses: %s" % str(incorrect_guesses))
-                print("***************************\n\n")
+                echo(word)
+                echo("Incorrect Guesses: %s" % str(incorrect_guesses))
+                echo("***************************\n\n")
         else:
-            print("\nWRONG INPUT!")
-            print("Please Write a Single Letter!")
+            print("\n")
+            echo("WRONG INPUT!")
+            echo("Please Write a Single Letter!")
 
 
 
