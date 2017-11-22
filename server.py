@@ -60,19 +60,12 @@ def on_new_client(clientsocket,addr, word):
             # print("Found Correct Guess")
             msg = ("/").join([str(return_string), str(incorrect_guesses), str(is_correct), str(all_correct)])
         # if isRunning:
-        clientsocket.send(msg)
-        #do some checks and if msg == someWeirdSignal: break:
-        # msg = raw_input('SERVER >> ')
-        # msg = "Press ENTER to begin Hangman Game"
-        #Maybe some code to compute the last digit of PI, play game or anything else can go here and when you are done.
-        # clientsocket.send(msg)
-        # msg = clientsocet.recv(1024)
-
-
-        # clientsocket.recv(1024)
-
         if num_incorrect_guesses >= 6:
             isRunning = False
+            msg = ("/").join(["$INCORRECT$", " ", " ", " "])
+            clientsocket.send(msg)
+        else:
+            clientsocket.send(msg)
 
     supervisor.close_client()
     clientsocket.close()

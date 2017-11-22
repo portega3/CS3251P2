@@ -1,4 +1,49 @@
 import socket
+import time
+
+def echo(string, indent=1):  # name it whatever you want, e.g. p
+    print('\t'*indent + string)
+
+def draw_hangman(misses):
+    echo('_____')
+    echo('|    |')
+    if misses >= 1:
+        echo('|    O')
+    else:
+        echo('|')
+    two_misses = '|'
+    three_misses = '/|'
+    four_misses = '/|\\'
+    if misses >= 2:
+        if misses > 4:
+            body_misses = 4
+        else:
+            body_misses = misses
+        miss_vector_body = ["",two_misses, three_misses, four_misses]
+
+        body_shown = miss_vector_body[body_misses-1]
+        if body_misses >= 3:
+            body_spaces = 3
+        else:
+            body_spaces = 4
+        # body_spaces = 5 - len(body_shown)
+        echo("|" + " "*body_spaces + body_shown)
+    else:
+        echo("|")
+    if misses >= 5:
+        five_misses = "/"
+        six_misses = "/ \\"
+        miss_vector_legs = ["","", "", "", five_misses, six_misses]
+        legs_shown = miss_vector_legs[misses-1]
+        legs_spaces = 3
+        echo("|" + " "*legs_spaces + legs_shown)
+    else:
+        echo("|")
+
+    echo("|")
+    echo("|\\")
+    echo("| \\")
+    echo("|__\\______")
 
 host = socket.gethostname()
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -12,13 +57,23 @@ if data == "OK":
     msg = client_socket.send(msg)
     isRunning = True
 elif data == 'q' or data == 'Q':
-    print("\n*******************************************")
-    print("Error: Too Many Clients Already Connected")
-    print("Try Again Later")
-    print("*******************************************\n")
-    # client_socket.send("OK")
+    #Second attempt for error handling
     client_socket.close()
-    isRunning = False
+    time.sleep(0.1)
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_socket.connect((host, 50000))
+    client_socket.send("OK")
+    msg = client_socket.recv(1024)
+    if msg == 'q' or msg == 'Q':
+        print("\n*******************************************")
+        print("Error: Too Many Clients Already Connected")
+        print("Try Again Later")
+        print("*******************************************\n")
+    # client_socket.send("OK")
+        client_socket.close()
+        isRunning = False
+    else:
+        isRunning = True
 if isRunning == True:
     msg = client_socket.recv(1024)
     word, incorrect_guesses, _, _ = msg.split("/")
@@ -26,53 +81,55 @@ if isRunning == True:
     # print("Incorrect Guesses: %s" % str(incorrect_guesses))
     # isRunning = True
     while isRunning:
-        guess = raw_input("Please Enter a Guess\n$").lower()
+        border = "***************************"
+        print(border)
+        print("Incorrect Guesses: %s" % str(incorrect_guesses))
+        num_guesses_left = 6 - len(incorrect_guesses)
+        draw_hangman(len(incorrect_guesses))
+        echo(border)
+        print("%s Guess(es) Left!" % str(num_guesses_left))
+        guess = raw_input("Please Enter a Guess\n%s\n$" % str(word)).lower()
 
-        if guess.isalpha():
+        if guess.isalpha() and len(guess) == 1:
 
             msg = client_socket.send(guess.lower())
 
             msg = client_socket.recv(1024).split("/")
-            print("Received Message here: %s" % str(msg))
+            # print("Received Message here: %s" % str(msg))
 
             word = msg[0]
             incorrect_guesses = msg[1]
             is_correct = msg[2]
             all_correct = msg[3]
 
-            # print("Received Message here: %s" % str(msg))
-
-            print("***************************")
-            if is_correct == "True":
-                print("Great Guess!")
-                if all_correct == "True":
-                    print("Victor!")
-                    isRunning = False
+            if word == '$INCORRECT$':
+                echo(border)
+                fail_message = "!You've Lost the Game!"
+                echo(fail_message)
+                draw_hangman(6)
+                # print(fail_message)
+                print("")
+                echo(border + "\n\n")
+                isRunning = False
             else:
-                print("Wrong!")
+                # print("Received Message here: %s" % str(msg))
 
-            print(word)
-            print("Incorrect Guesses: %s" % str(incorrect_guesses))
-            print("***************************")
+                print("***************************")
+                if is_correct == "True":
+                    print("Great Guess!")
+                    if all_correct == "True":
+                        print("Victor!")
+                        isRunning = False
+                else:
+                    print("Wrong!")
 
-            # msg = raw_input("SEND>> ")
-            # msg = client_socket.recv(1024)
-            # client_socket.send(msg)
-            # data = client_socket.recv(1024)
-            # if ( data == 'q' or data == 'Q'):
-            #     print("Error: Too Many Clients Already Connected")
-            #     client_socket.close()
-            #     break;
-            # else:
-            #     print "RECIEVED:" , data
-            #     data = raw_input ( "SEND( TYPE q or Q to Quit):" )
-            #     if (data <> 'Q' and data <> 'q'):
-            #         client_socket.send(data)
-            #     else:
-            #         client_socket.send(data)
-            #         client_socket.close()
-            #         break
+                print(word)
+                print("Incorrect Guesses: %s" % str(incorrect_guesses))
+                print("***************************\n\n")
         else:
-            print("Please Write a Letter!")
+            print("\nWRONG INPUT!")
+            print("Please Write a Single Letter!")
+
+
 
     client_socket.close()
