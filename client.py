@@ -49,6 +49,12 @@ def draw_hangman(misses):
 def create_client_msg(msg):
     return ("/").join([str(len(msg)), msg])
 
+def split_server_msg(msg):
+    msg = msg.split("/")
+    data = msg[3]
+    word, incorrect_guesses, is_correct, all_correct = data.split("/")
+    return word, list(incorrect_guesses), is_correct, all_correct
+
 if len(sys.argv) > 1:
     port = int(sys.argv[1])
 else:
@@ -76,7 +82,7 @@ elif data == 'q' or data == 'Q':
     client_socket.close()
     time.sleep(0.1)
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect((host, 50000))
+    client_socket.connect((host, port))
 
     # client_socket.send(msg)
     msg = client_socket.recv(1024)
@@ -93,7 +99,8 @@ elif data == 'q' or data == 'Q':
 if isRunning == True:
     msg = client_socket.recv(1024)
     print("msg: %s" % msg)
-    word, incorrect_guesses, _, _ = msg.split("/")
+    # word, incorrect_guesses, _, _ = msg.split("/")
+    word, incorrect_guesses, _, _ = split_server_msg(msg)
     # print(word)
     incorrect_guesses = list(incorrect_guesses)
     # print("Incorrect Guesses: %s" % str(incorrect_guesses))
@@ -113,13 +120,14 @@ if isRunning == True:
             msg = create_client_msg(guess.lower())
             client_socket.send(msg)
 
-            msg = client_socket.recv(1024).split("/")
+            msg = client_socket.recv(1024)
+            word, incorrect_guesses, is_correct, all_correct = split_server_msg(msg)
             # print("Received Message here: %s" % str(msg))
 
-            word = msg[0]
-            incorrect_guesses = list(msg[1])
-            is_correct = msg[2]
-            all_correct = msg[3]
+            # word = msg[0]
+            # incorrect_guesses = list(msg[1])
+            # is_correct = msg[2]
+            # all_correct = msg[3]
 
             if word == '$INCORRECT$':
                 echo(border)

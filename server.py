@@ -14,6 +14,9 @@ class ClientSupervisor:
     def get_num_clients(self):
         return self.num_clients
 
+def create_server_message(spec_msg, word_length = 0, num_incorrect=0, data=None):
+    return ("%").join([str(spec_msg), str(word_length), str(num_incorrect), str(data)])
+
 def on_new_client(clientsocket,addr, word):
 
     global supervisor
@@ -33,7 +36,9 @@ def on_new_client(clientsocket,addr, word):
         current_guesses = []
 
         return_string, current_guesses, is_correct, all_correct = check_guess(word, [], [], initializing=True)
-        msg = ("/").join([str(return_string), str(incorrect_guesses), str(is_correct), str(all_correct)])
+        data = ("/").join([str(return_string), str(incorrect_guesses), str(is_correct), str(all_correct)])
+        msg = create_server_message(1, len(word), 0, data)
+        
         clientsocket.send(msg)
     else:
         # print("Connectioon Failed, Terminating Connection")
