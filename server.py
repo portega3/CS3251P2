@@ -38,7 +38,7 @@ def on_new_client(clientsocket,addr, word):
         return_string, current_guesses, is_correct, all_correct = check_guess(word, [], [], initializing=True)
         data = ("/").join([str(return_string), str(incorrect_guesses), str(is_correct), str(all_correct)])
         msg = create_server_message(1, len(word), 0, data)
-        
+
         clientsocket.send(msg)
     else:
         # print("Connectioon Failed, Terminating Connection")
@@ -59,21 +59,26 @@ def on_new_client(clientsocket,addr, word):
         if all_correct:
             # print("Victor!")
             isRunning = False
-            msg = ("/").join([str(return_string), str(incorrect_guesses), str(is_correct), str(all_correct)])
-
+            data = ("/").join([str(return_string), str(incorrect_guesses), str(is_correct), str(all_correct)])
+            msg = create_server_message(0, len(word), 0, data)
         elif not is_correct:
             incorrect_guesses = incorrect_guesses + guess
             num_incorrect_guesses += 1
-            msg = ("/").join([str(return_string), str(incorrect_guesses), str(is_correct), str(all_correct)])
+            data = ("/").join([str(return_string), str(incorrect_guesses), str(is_correct), str(all_correct)])
+            msg = create_server_message(1, len(word), 0, data)
 
             # print("Found Incorrect Guess")
         elif is_correct:
             # print("Found Correct Guess")
-            msg = ("/").join([str(return_string), str(incorrect_guesses), str(is_correct), str(all_correct)])
+            data = ("/").join([str(return_string), str(incorrect_guesses), str(is_correct), str(all_correct)])
+            msg = create_server_message(1, len(word), 0, data)
+
         # if isRunning:
         if num_incorrect_guesses >= 6:
             isRunning = False
-            msg = ("/").join(["$INCORRECT$", " ", " ", " "])
+            data = ("/").join(["$INCORRECT$", " ", " ", " "])
+            msg = create_server_message(0, len(word), 0, data)
+
             clientsocket.send(msg)
         else:
             clientsocket.send(msg)

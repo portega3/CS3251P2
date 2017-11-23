@@ -50,7 +50,8 @@ def create_client_msg(msg):
     return ("/").join([str(len(msg)), msg])
 
 def split_server_msg(msg):
-    msg = msg.split("/")
+    msg = msg.split("%")
+    # print("split message: %s" % str(msg))
     data = msg[3]
     word, incorrect_guesses, is_correct, all_correct = data.split("/")
     return word, list(incorrect_guesses), is_correct, all_correct
@@ -98,7 +99,8 @@ elif data == 'q' or data == 'Q':
         isRunning = True
 if isRunning == True:
     msg = client_socket.recv(1024)
-    print("msg: %s" % msg)
+    # print("msg: %s" % msg)
+    # print("split_msg: %s" % str(split_server_msg(msg)))
     # word, incorrect_guesses, _, _ = msg.split("/")
     word, incorrect_guesses, _, _ = split_server_msg(msg)
     # print(word)
