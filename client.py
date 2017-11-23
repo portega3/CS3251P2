@@ -1,5 +1,6 @@
 import socket
 import time
+import sys
 
 def echo(string, indent=1):  # name it whatever you want, e.g. p
     print('\t'*indent + string)
@@ -45,9 +46,17 @@ def draw_hangman(misses):
     echo("| \\")
     echo("|__\\______")
 
+def create_client_msg(msg):
+    return ("/").join([str(len(msg)), msg])
+
+if len(sys.argv) > 1:
+    port = int(sys.argv[1])
+else:
+    port = 50000
+
 host = socket.gethostname()
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client_socket.connect((host, 50000))
+client_socket.connect((host, port))
 
 data = client_socket.recv(1024)
 isRunning = False
@@ -55,12 +64,12 @@ if data == "OK":
     print("Welcome to Hangman!")
     user_input = raw_input("\tENTER ANY KEY TO BEGIN \n\tENTER Q TO QUIT\n$").lower()
     if user_input == "q":
-        msg = "q"
-        msg = client_socket.send(msg)
+        msg = create_client_msg("q")
+        client_socket.send(msg)
         isRunning = False
     else:
-        msg = "OK"
-        msg = client_socket.send(msg)
+        msg = create_client_msg("OK")
+        client_socket.send(msg)
         isRunning = True
 elif data == 'q' or data == 'Q':
     #Second attempt for error handling
@@ -68,7 +77,8 @@ elif data == 'q' or data == 'Q':
     time.sleep(0.1)
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((host, 50000))
-    client_socket.send("OK")
+
+    # client_socket.send(msg)
     msg = client_socket.recv(1024)
     if msg == 'q' or msg == 'Q':
         print("\n*******************************************")
@@ -82,6 +92,7 @@ elif data == 'q' or data == 'Q':
         isRunning = True
 if isRunning == True:
     msg = client_socket.recv(1024)
+    print("msg: %s" % msg)
     word, incorrect_guesses, _, _ = msg.split("/")
     # print(word)
     incorrect_guesses = list(incorrect_guesses)
@@ -99,7 +110,8 @@ if isRunning == True:
 
         if guess.isalpha() and len(guess) == 1 and guess not in incorrect_guesses:
 
-            msg = client_socket.send(guess.lower())
+            msg = create_client_msg(guess.lower())
+            client_socket.send(msg)
 
             msg = client_socket.recv(1024).split("/")
             # print("Received Message here: %s" % str(msg))

@@ -1,6 +1,7 @@
 import socket               # Import socket module
 import thread
 import random
+import sys
 
 class ClientSupervisor:
     def __init__(self):
@@ -16,9 +17,12 @@ class ClientSupervisor:
 def on_new_client(clientsocket,addr, word):
 
     global supervisor
-    supervisor.add_client()
+    # supervisor.add_client()
     msg = clientsocket.send("OK")
     msg = clientsocket.recv(1024)
+    msg_length, msg = msg.split("/")
+
+    # print("msg_length: %s, msg: %s" % (msg_length, msg))
 
     if msg == "OK":
         # print("Connection Successful")
@@ -41,7 +45,8 @@ def on_new_client(clientsocket,addr, word):
 
     # isRunning = True
     while isRunning:
-        guess = clientsocket.recv(1024)
+        msg = clientsocket.recv(1024)
+        msg_length, guess = msg.split("/")
         # print("\nGuess on this end: %s" % str(guess))
         return_string, current_guesses, is_correct, all_correct = check_guess(word, current_guesses, guess)
         # print("Is Correct guess: %s" % str(is_correct))
@@ -118,10 +123,10 @@ def open_file(filename):
     words = words[1:]
     return words
 
-def main():
+def main(port):
     s = socket.socket()         # Create a socket object
     host = socket.gethostname() # Get local machine name
-    port = 50000                # Reserve a port for your service.
+                  # Reserve a port for your service.
 
     #Starting Supervisor
     global supervisor
@@ -143,6 +148,7 @@ def main():
         # print("num_clients: %s" % str(num_clients))
         if supervisor.get_num_clients() < 3:
             # supervisor.num_clients += 1
+            supervisor.add_client()
             c, addr = s.accept()     # Establish connection with client.
             print('Got connection from', addr)
             word = random.choice(supervisor.word_list).lower()
@@ -161,8 +167,12 @@ def main():
 
 if __name__ == "__main__":
     # num_clients = 0
+    if len(sys.argv) > 1:
+        port = int(sys.argv[1])
+    else:
+        port = 50000
     global supervisor
     supervisor = ClientSupervisor()
     supervisor.word_list = open_file('words.txt')
     print("supervisor.word_list" + str(supervisor.word_list))
-    main()
+    main(port)
